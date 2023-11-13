@@ -29,6 +29,7 @@ func RegisterCommands(link *CommandLink) {
 	link.AddCommand(SubscribedCommand{})
 	link.AddCommand(UnsubscribeCommand{})
 	link.AddCommand(AddQuoteCommand{})
+	link.AddCommand(UpdateQuotesCommand{})
 	link.AddCommand(SetQuoteChannelCommand{})
 	link.AddCommand(ListQuotesCommand{})
 	link.AddCommand(DeleteQuoteCommand{})
@@ -350,6 +351,33 @@ func (cmd AddQuoteCommand) Run(args []string, respond func(string), context *Bot
 	}
 	respond("Quote added with ID: " + uuid)
   err = updateTeamspeakQuotes(context.repository, context.teamspeak)
+  if err != nil {
+    log.Println(err)
+    return
+  }
+  respond("Updated Teamspeak quotes")
+}
+
+type UpdateQuotesCommand struct{}
+
+func (cmd UpdateQuotesCommand) Command() string {
+  return "updatequotes"
+}
+func (cmd UpdateQuotesCommand) Description() string {
+  return "Updates the quotes on the Teamspeak server"
+}
+func (cmd UpdateQuotesCommand) IsAdmin() bool {
+  return true
+}
+func (cmd UpdateQuotesCommand) IsRestricted() bool {
+  return false
+}
+func (cmd UpdateQuotesCommand) Run(args []string, respond func(string), context *BotContext) {
+	if len(args) != 0 {
+		respond("Usage: /updatequotes")
+		return
+	}
+  err := updateTeamspeakQuotes(context.repository, context.teamspeak)
   if err != nil {
     log.Println(err)
     return
