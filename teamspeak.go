@@ -149,9 +149,9 @@ func createTeamspeakQuotesString(quotes []Quote) (string, error) {
 		}
 	}
 	for author := range m {
-		description += author + "\n"
+		description += "[size=14][color=orange][b]" + author + "[/b][/color][/size]" + "\n\n"
 		for _, quote := range m[author] {
-			description += "-" + quote + "\n"
+			description += "[size=10][color=lime][b]- " + quote + "[/b][/color][/size]" + "\n"
 		}
 	}
 	return description, nil
