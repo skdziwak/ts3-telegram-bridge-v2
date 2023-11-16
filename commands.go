@@ -340,7 +340,7 @@ func (cmd AddQuoteCommand) Run(args []string, respond func(string), context *Bot
 	}
 	author := args[0]
 	content := args[1]
-  content = strings.ReplaceAll(content, "\\n", "\n")
+	content = strings.ReplaceAll(content, "\\n", "\n")
 	uuid := uuid.New().String()
 	quote := Quote{UUID: uuid, Author: author, Content: content, CreatedBy: context.GetUserID()}
 	err := context.repository.AddQuote(quote)
@@ -350,39 +350,39 @@ func (cmd AddQuoteCommand) Run(args []string, respond func(string), context *Bot
 		return
 	}
 	respond("Quote added with ID: " + uuid)
-  err = updateTeamspeakQuotes(context.repository, context.teamspeak)
-  if err != nil {
-    log.Println(err)
-    return
-  }
-  respond("Updated Teamspeak quotes")
+	err = updateTeamspeakQuotes(context.repository, context.teamspeak)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	respond("Updated Teamspeak quotes")
 }
 
 type UpdateQuotesCommand struct{}
 
 func (cmd UpdateQuotesCommand) Command() string {
-  return "updatequotes"
+	return "updatequotes"
 }
 func (cmd UpdateQuotesCommand) Description() string {
-  return "Updates the quotes on the Teamspeak server"
+	return "Updates the quotes on the Teamspeak server"
 }
 func (cmd UpdateQuotesCommand) IsAdmin() bool {
-  return true
+	return true
 }
 func (cmd UpdateQuotesCommand) IsRestricted() bool {
-  return false
+	return false
 }
 func (cmd UpdateQuotesCommand) Run(args []string, respond func(string), context *BotContext) {
 	if len(args) != 0 {
 		respond("Usage: /updatequotes")
 		return
 	}
-  err := updateTeamspeakQuotes(context.repository, context.teamspeak)
-  if err != nil {
-    log.Println(err)
-    return
-  }
-  respond("Updated Teamspeak quotes")
+	err := updateTeamspeakQuotes(context.repository, context.teamspeak)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	respond("Updated Teamspeak quotes")
 }
 
 type ListQuotesCommand struct{}
@@ -411,15 +411,26 @@ func (cmd ListQuotesCommand) Run(args []string, respond func(string), context *B
 		respond("No quotes found")
 		return
 	}
-	var responseText string
+	var responseText strings.Builder
+	var ChunkSize int
+	var maxChunkSize int = 3750
 	for _, quote := range quotes {
+		var quoteText string
 		if showUUIDs {
-			responseText += fmt.Sprintf("ID: %s - \"%s\" by %s\n", quote.UUID, quote.Content, quote.Author) // Changed from Context to Content
+			quoteText += fmt.Sprintf("ID: %s - \"%s\" by %s\n", quote.UUID, quote.Content, quote.Author) // Changed from Context to Content
 		} else {
-			responseText += fmt.Sprintf("\"%s\" by %s\n", quote.Content, quote.Author) // Changed from Context to Content
+			quoteText += fmt.Sprintf("\"%s\" by %s\n", quote.Content, quote.Author) // Changed from Context to Content
 		}
+
+		if ChunkSize+len(quoteText) > maxChunkSize {
+			respond(responseText.String())
+			responseText.Reset()
+			ChunkSize = 0
+		}
+		responseText.WriteString(quoteText)
+		ChunkSize += len(quoteText)
 	}
-	respond(responseText)
+	respond(responseText.String())
 }
 
 type DeleteQuoteCommand struct{}
@@ -449,95 +460,95 @@ func (cmd DeleteQuoteCommand) Run(args []string, respond func(string), context *
 		return
 	}
 	respond("Quote deleted")
-  err = updateTeamspeakQuotes(context.repository, context.teamspeak)
-  if err != nil {
-    log.Println(err)
-    return
-  }
-  respond("Updated Teamspeak quotes")
+	err = updateTeamspeakQuotes(context.repository, context.teamspeak)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	respond("Updated Teamspeak quotes")
 }
 
 type SetQuoteChannelCommand struct{}
 
 func (cmd SetQuoteChannelCommand) Command() string {
-  return "setquotechannel"
+	return "setquotechannel"
 }
 func (cmd SetQuoteChannelCommand) Description() string {
-  return "Sets the channel where quotes are posted. Usage: /setquotechannel <channel name>"
+	return "Sets the channel where quotes are posted. Usage: /setquotechannel <channel name>"
 }
 func (cmd SetQuoteChannelCommand) IsAdmin() bool {
-  return true
+	return true
 }
 func (cmd SetQuoteChannelCommand) IsRestricted() bool {
-  return false
+	return false
 }
 func (cmd SetQuoteChannelCommand) Run(args []string, respond func(string), context *BotContext) {
-  if len(args) != 1 {
-    respond("Usage: /setquotechannel <channel name>")
-    return
-  }
-  channelName := args[0]
-  err := context.repository.SetQuotesChannel(channelName)
-  if err != nil {
-    log.Println(err)
-    respond("Error setting quotes channel")
-    return
-  }
-  respond("Quotes channel set to " + channelName)
+	if len(args) != 1 {
+		respond("Usage: /setquotechannel <channel name>")
+		return
+	}
+	channelName := args[0]
+	err := context.repository.SetQuotesChannel(channelName)
+	if err != nil {
+		log.Println(err)
+		respond("Error setting quotes channel")
+		return
+	}
+	respond("Quotes channel set to " + channelName)
 }
 
 type ExportQuotesCommand struct{}
 
 func (cmd ExportQuotesCommand) Command() string {
-    return "exportquotes"
+	return "exportquotes"
 }
 
 func (cmd ExportQuotesCommand) Description() string {
-    return "Exports all quotes to a text file and sends it."
+	return "Exports all quotes to a text file and sends it."
 }
 
 func (cmd ExportQuotesCommand) IsAdmin() bool {
-    return false
+	return false
 }
 
 func (cmd ExportQuotesCommand) IsRestricted() bool {
-    return true
+	return true
 }
 
 func (cmd ExportQuotesCommand) Run(args []string, respond func(string), context *BotContext) {
-    quotes, err := context.repository.GetAllQuotes()
-    if err != nil {
-        log.Println(err)
-        respond("Error retrieving quotes")
-        return
-    }
-    if len(quotes) == 0 {
-        respond("No quotes found")
-        return
-    }
+	quotes, err := context.repository.GetAllQuotes()
+	if err != nil {
+		log.Println(err)
+		respond("Error retrieving quotes")
+		return
+	}
+	if len(quotes) == 0 {
+		respond("No quotes found")
+		return
+	}
 
-    var buffer bytes.Buffer
-    for _, quote := range quotes {
-        line := fmt.Sprintf("%s - \"%s\"\n", quote.Author, quote.Content)
-        _, err := buffer.WriteString(line)
-        if err != nil {
-            log.Println(err)
-            respond("Error writing quotes to buffer")
-            return
-        }
-    }
+	var buffer bytes.Buffer
+	for _, quote := range quotes {
+		line := fmt.Sprintf("%s - \"%s\"\n", quote.Author, quote.Content)
+		_, err := buffer.WriteString(line)
+		if err != nil {
+			log.Println(err)
+			respond("Error writing quotes to buffer")
+			return
+		}
+	}
 
-    chatID := context.update.Message.Chat.ID
-    reader := bytes.NewReader(buffer.Bytes())
-    file := tgbotapi.FileReader{Name: "quotes.txt", Reader: reader }
-    msg := tgbotapi.NewDocument(chatID, file)
+	chatID := context.update.Message.Chat.ID
+	reader := bytes.NewReader(buffer.Bytes())
+	file := tgbotapi.FileReader{Name: "quotes.txt", Reader: reader}
+	msg := tgbotapi.NewDocument(chatID, file)
 
-    _, err = context.telegram.Send(msg)
-    if err != nil {
-        log.Println(err)
-        respond("Failed to send the quotes file")
-        return
-    }
+	_, err = context.telegram.Send(msg)
+	if err != nil {
+		log.Println(err)
+		respond("Failed to send the quotes file")
+		return
+	}
 
-    respond("Quotes exported and sent successfully")
+	respond("Quotes exported and sent successfully")
 }
