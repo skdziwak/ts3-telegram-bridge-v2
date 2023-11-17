@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"strings"
 
@@ -150,9 +151,13 @@ func createTeamspeakQuotesString(quotes []Quote) (string, error) {
 	}
 	for author := range m {
 		description += "[size=14][color=orange][b]" + author + "[/b][/color][/size]" + "\n\n"
-		for _, quote := range m[author] {
-			description += "[size=10][color=lime][b]- " + quote + "[/b][/color][/size]" + "\n"
-		}
+    for i, quote := range m[author] {
+      color := "lime"
+      if i%2 == 1 {
+        color = "skyblue"
+      }
+      description += fmt.Sprintf("[size=10][color=%s][b]%s[/b][/color][/size]\n", color, quote)
+    }
 	}
 	return description, nil
 }
